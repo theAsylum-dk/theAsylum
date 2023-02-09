@@ -1,0 +1,422 @@
+<html>
+<head>
+  <title>Troubleshooting</title>
+  <!-- <base href="http://www.ibb.net/~anne/keyboard/">  -->
+</head>
+<body>
+  <center><h1>Troubleshooting</h1></center>
+<center><font size="+1"><b><i>have a go at it yourself</i></b></font>
+<p><font size="-1">
+<a href="troubleshooting.html">troubleshooting.html</a>
+
+<p>version 0.03
+<font size="-1">
+<script language="LiveScript">
+
+<!---//hide script from old browsers
+    document.write( "<br>"+ document.lastModified );
+//end hiding contents --->
+
+</script>
+</font>
+</center>
+
+<hr><center>
+<a href="keyboard.html">Main Page</a>|<a href="keyboardprev.html">The
+Alternative Way</a>|<u>Troubleshooting</u></center>
+<hr>
+<h2>Index</h2>
+<a href="troubleshooting.html#intro">Introduction</a><br>
+<b>1&nbsp;&nbsp;&nbsp;&nbsp;</b><a href="troubleshooting.html#trouble">Troubleshooting</a><br>
+<b>1.1</b>&nbsp;<a href="troubleshooting.html#moretools">More tools</a><br>
+<b>2&nbsp;&nbsp;&nbsp;&nbsp;</b><a href="troubleshooting.html#work">How it all works</a><br>
+2.1&nbsp;<a href="troubleshooting.html#general">Keyboard Generalities</a><br>
+2.2&nbsp;<a href="troubleshooting.html#termexp">Terminfo what and why</a><br>
+2.3&nbsp;<a href="troubleshooting.html#termcap">Fiddling with Terminfo
+entries</a><br>
+2.4&nbsp;<a href="troubleshooting.html#overview">Overview (picture)</a><br>
+<a name="intro"><h2>Introduction</h2></a>
+The purpose of this page is to provide some more information for people who
+want or need to know more. While this page is currently not much more than some
+bits and pieces, it does already contain some things not mentioned other
+places, check e.g. the <a href="troubleshooting.html#termexp">terminfo section</a>. See the <a href="keyboard.html#ref">references</a> for
+pointers to other sources of related information.  
+
+<a name="trouble"><h2>Troubleshooting</h2></a>
+The best way to trouble-shoot is using <code>Ctrl-v &lt;key&gt;</code>. Press
+<code>Control</code> and <code>v</code> simultaneously, release them, and
+then type one of the special keys, e.g. &lt;Delete&gt;. It will tell you
+which sequence will be sent to the terminal (console or xterm). You can
+then edit <code>~/.inputrc</code>, <code>~/.cshrc</code> or
+<code>~/.Xdefaults</code> to do the right thing when a particular sequence
+is sent. For example, if &lt;Delete&gt; doesn't delete, and
+<code>Ctrl-v &lt;Delete&gt;</code> tells you that <code>^?</code> is sent, add
+the following to your <code>~/.inputrc</code> (note that <code>~/.inputrc</code> is the
+initialization file of the readline library, which is used by several
+applications to read input):
+
+<p><code>"\C-?": delete-char</code><br> (this is equivalent to <code>DEL:
+delete-char</code>, but a better example...). In <a href="keyboard.html#kvt">kvt</a>, I found that &lt;Delete&gt; sent
+<code>^[[3~</code>, so I added the following to <code>~/.inputrc</code>: 
+
+<p><code>"\e[3~": delete-char</code>
+
+<p> This means that bash (or any application using the readline library)
+will delete when it receives <code>^[[3~</code> as well. As long as this
+sequence isn't supposed to do other things (and it isn't), it is perfectly
+O.K. to let bash delete on both occasions. It's the same story for Home and
+End in kvt, see the <a href="keyboard.html">main page</a>. Note that
+<code>\e</code> means <code>ESC</code>. Guess what you'll get when you do
+<code>Ctrl-v
+&lt;ESC&gt;</code>? Right, you'll get <code>^[</code>.  
+
+<p> You can use the same sequence to do different things, as long as it
+happens in different environments, and as long as you tell bash or tcsh
+about it. 
+<!--See the <a href="keybdextra.html">Tips & Tricks</a>.--> You'll just
+have to make constructions such as the following:
+
+<pre>
+<code>
+$if TERM=linux
+"\e[1~": beginning-of-line
+"\e[4~": end-of-line
+$endif
+
+$if TERM=xterm
+#rxvt
+"\e[7~": beginning-of-line
+"\e[8~": end-of-line
+#kvt
+"\e[H": beginning-of-line
+"\e[F": end-of-line
+
+$if Bash
+"\e[11~": "Function Key 1"
+"\e[12~": "Hello"
+$endif
+$endif  
+</code>
+</pre>
+
+And so on. I couldn't think of a (useful) case where you need two sequences
+to do the same thing, but the example serves to show how to set up different
+settings in different environments.
+
+<a name="moretools"><h3>More tools</h3></a>
+With <strong>showkey</strong> you can see what keycodes are produced on the
+console. The keycodes are the result of a translation of the scancodes,
+which are the actual output of the keyboard. The scancodes can be made 
+visible by <code>showkey -s</code>, and by <strong>getkeycodes</strong>.
+You can affect the translation from scan- to keycodes, with the
+utility <strong>setkeycodes</strong>. You don't need it. 
+
+<p> The system keymap is the translation table which converts keycodes to
+strings. The system keymap is a plain ASCII file which is loaded by
+<strong>loadkeys</strong>. In X, you can use <strong>xev</strong> to show
+the keycodes the X server receives. The X server's keymap is a translation
+of the system keymap. This has led to a lot of confusion, since many people
+didn't realize the X keymap depends on the system keymap for its
+initialization. The X keymap can however, be overridden with
+<strong>xmodmap</strong> or <strong>xkeycaps</strong>.
+
+<p>There's a lot more about all this in the HOWTO. 
+
+<p>A trick you can use to fix the keys in apps that are broken (or apps that
+you have broken:-) is to use <strong>expect</strong> to intercept certain keyevents, and
+change them, as demonstrated in the script below.
+
+<pre><code>
+#!/usr/bin/expect
+
+eval spawn -noecho $argv
+
+interact {
+ \177        {send "\010"}
+ "\033\[3~"  {send "\177"}
+}
+</code></pre>
+
+You could run it as <code>bsdelfix telnet brokenapp</code>. This particular
+script sends BS to the application if \177 is received (DEL) and DEL if ^[3~ is
+received. See the page about <a href="keyboardprev.html">the alternative
+way</a> for an example of this method.
+
+<a name="work"><h2>How it all works</h2></a>
+In this section, an attempt will be made to shed some light on the
+mechanisms behind all the trouble. 
+
+<a name="general"><h3>Keyboard Generalities</h3></a>
+From the <a href="ftp://ftp.cs.ruu.nl/users/mirror/Linux/Documentation/HOWTO/Keyboard-and-Console-HOWTO.gz">Keyboard-and-Console-HOWTO</a>:
+<pre>
+  You press a key, and the keyboard controller sends scancodes to the
+  kernel keyboard driver. Some keyboards can be programmed, but usually
+  the scancodes corresponding to your keys are fixed.  The kernel
+  keyboard driver just transmits whatever it receives to the application
+  program when it is in scancode mode, like when X is running.
+  Otherwise, it parses the stream of scancodes into keycodes,
+  corresponding to key press or key release events.  (A single key press
+  can generate up to 6 scancodes.)  These keycodes are transmitted to
+  the application program when it is in keycode mode (as used, for
+  example, by showkey).  Otherwise, these keycodes are looked up in the
+  keymap, and the character or string found there is transmitted to the
+  application, or the action described there is performed.  (For
+  example, if one presses and releases the a key, then the keyboard
+  produces scancodes 0x1e and 0x9e, this is converted to keycodes 30 and
+  158, and then transmitted as 0141, the ASCII or latin-1 code for 'a';
+  if one presses and releases Delete, then the keyboard produces
+  scancodes 0xe0 0x53 0xe0 0xd3, these are converted to keycodes 111 and
+  239, and then transmitted as the 4-symbol sequence ESC [ 3 ~, all
+  assuming a US keyboard and a default keymap. An example of a key
+  combination to which an action is assigned is Ctrl-Alt-Del.)
+</pre>
+<a name="termexp"><h3>Terminfo what and why</h3></a>
+If you still have problems with certain programs, e.g. ports from other
+platforms, it's very possible due to broken terminfo data bases. Note that
+the termcap database has been declared obsolete, it's only present for
+compatability with very old software.
+In short, most linux programs have learned to work with the broken entries,
+which is the reason why most people will not need to modify them. The
+full and excellent explanation, handed to me by Liviu Daia, follows
+below (the question leading to this was in which cases it would be necessary
+to edit terminfo entries):
+<pre>
+    Simply put, keyboard input in text-mode applications can be done
+at several logical "layers".
+
+    The first (usable) layer is the raw string input: the application
+opens /dev/tty, and reads the keystrokes from it ("raw" here means
+"without further munging", not the keyboard raw mode).  This method is
+used f.i. by login.  With it, the Backspace key works automatically
+(basically the tty driver takes care of that), but not the arrow
+keys, the Delete key, or anything else.  If an application needs more
+functionality, it has to detect the relevant keys (or key combinations)
+by itself.
+
+    Now, the exact behaviour of this string input is affected by the
+terminfo settings (or termio on older Unices).  This settings can be
+changed independently for each tty (or ttyp) line, and control things
+like the line speed, whether the keystrokes are echoed to the screen or
+not, whether the input is line-buffered or not, and some more exotic
+parameters (mostly relevant to serial lines, modems and so on), but also
+the "erase" character (used to remove the last character entered), and
+the "interrupt" character (normally ^C, used to send an INT signal to
+the application).  For the Backspace / Delete topic, the only relevant
+setting is "erase", which, of course, has to be in synch with the code
+returned by the Backspace key.
+
+    At the shell level, these settings can be changed with the stty
+command.  The following script f.i. will read a character without
+waiting for the Return key:
+
+	#! /bin/sh
+	echo -n "Enter a character: "
+	stty cbreak
+	readchar=`dd if=/dev/tty bs=1 count=1 2&gt;/dev/null`
+	stty -cbreak
+	echo
+	echo "Thank you for typing a $readchar."
+
+Consequently, another typical use for reading /dev/tty directly is when
+waiting for a keypress --- but that's another story.
+
+    Now, the method above is nice and effective for reading "normal"
+ASCII characters (or even control characters), but it's useless for
+things like arrow keys, simply because different terminals will send
+different sequences for those keys.  So this is handled at another
+layer, which takes into account all (well, most of) terminal-specific
+quirks: the termcap.  Basically, termcap has a data base containing
+strings specific to each terminal (usually located in /etc/termcap);
+when an application needs the value of, say, an arrow key, it finds the
+section corresponding to the current terminal in the termcap data base
+(according to the value of the TERM environment variable), then looks
+for the string corresponding to that arrow.
+
+    Since other terminal-specific settings can be described the same
+way, the termcap data base also contains informations related to the
+number of colors the terminal supports, the string it expects to change
+colors, to clear the screen or to move the cursor, and so on.  Termcap
+can be (and it is) used hence for "full screen" applications, but it's
+rather inefficient, and the programming interface is pretty awkward to
+use.  Typical example of application that use it: less (this is actually
+a configuration option, less can also use terminfo).
+
+    The next layer is readline.  This is a library that sits on top of
+termcap, and provides fancy functions for string input.  It doesn't
+mess with colors, screen movement, and the like.  The typical example
+of application that use readline is bash.  Certain parameters can be
+configured via the inputrc file, and these parameters are shared among
+all applications that use readline.  The one relevant to the Backspace /
+Delete discussion is "delete-char".
+
+    Readline provides a much nicer interface for string input than
+both reading /dev/tty and plain termcap, but it's also rather bloated
+(see "man 3 readline" for a list of functions: some of them are
+quite exotic), and the library itself is big, slow, and bad written.
+Therefore, despite the ever increasing number of requests, it will never
+be included in "small" or security-sensitive programs, like login.
+
+    The next layer (unrelated to readline) is terminfo.  The idea
+is the same as for termcap --- a data base is used to describe the
+terminals --- but some limitations in termcap have been removed, other
+features have been largely expanded (f.i. there are special entries
+for line drawing characters, so that the same application can show
+nice continuous lines on fancy terminals, and automatically fallback
+to ugly "|" and "-" characters on dumb terminals), and generally is
+more efficient.  Unlike termcap, the records in the data base are kept
+in separate binary files, organized in a hierarchy under a common
+directory.  As I said with another occasion, these records can be
+decompiled and compiled back with the infocmp and tic commands.
+
+    AFAIK, terminfo is distributed in the source form for Linux only
+within the ncurses package.
+
+    Now, terminfo is only the data base containing the descriptions
+for various terminals --- it doesn't provide functions to access the
+records by itself.  Specialized libraries must be used for accessing
+these records, the most popular ones being (n)curses and S-Lang.  These
+libraries provide a nice high-level abstraction layer for all screen
+operations (reading keyboard, drawing to the screen, colors, line
+characters and so on), and, in the absence of specific restrictions
+(like small memory footprint etc.), they are the preferred approach
+to writing text-mode applications.  They also usually go far beyond
+terminfo: both S-Lang and ncurses can fallback to termcap if the current
+terminal has no corresponding terminfo entry, they can manipulate
+text windows, and so on.  S-Lang has even a (very restrictive) curses
+emulation mode, and a few applications are specially designed to
+use them interchangeably (f.i. Midnight Commander and Mutt).  On an
+unrelated topic, please note however that S-Lang and ncurses are still
+fundamentally different both in design and in functionality, so most
+applications will only use one of them (f.i. slrn will probably never
+use ncurses).
+
+    Ok, getting closer to the initial question (which you probably
+almost forgot by now ;-)), about the need to mess with terminfo.  As
+usual, a little history can shed some light on the matter first.
+
+    Ncurses, which was intended to be a free and improved replacement
+for the curses library found on commercial Unices, used to be extremely
+buggy, and the same was true for the associated terminfo.  Version
+1.9.9g (the latest official one until a few days ago) was a real
+nightmare from this POV, and was pretty much unusable for anything
+serious.  As a reaction, some applications (f.i. Vim) migrated to some
+incredibly contorted (but "safe") solutions, like reading terminfo by
+themselves, and using lower level functions whenever possible.  Other
+applications have switched to S-Lang: this one was written specifically
+to overcome the bugs in ncurses, and could also use somewhat broken
+terminfo entries (it included later a full interpreted language --- but
+that's another story).  Finally, a minority of applications (f.i. Elvis)
+decided to live with the broken ncurses, and hope for the best from the
+future versions.
+
+    Anyway, back to your question now.  Most applications seem to be
+happy with the existing terminfo because they have learned how to live
+with broken entries one way or another: they either use terminfo for
+screen operations only and revert to reading /dev/tty for keyboard
+input, or provide hard-coded values for keys on most popular terminals
+hoping they will somehow match the actual settings, or even provide
+a "learn keys" function to adapt to the current settings on the fly
+(f.i. Midnight Commander does that).  So, basically, you don't need to
+change anything as long as nothing seems to be broken. :-) But this is
+only conjunctural, and the approaches above are contortions, _not_ the
+"normal" way to write applications!  If you find a "normal" application
+(possibly ported from another Unix system) that (naively) assumes it's
+ok to use getch() from ncurses or S-Lang to read the keyboard, you'd
+better make sure that terminfo is in synch with the codes sent by your
+keyboard.  If it's not, you have to debug it and modify it manually
+--- and that operation might turn to a royal pain.  If you change the
+keycodes generated by Backspace and Delete, you have to modify terminfo
+and termcap too.  It would be nice to have the relevant incantations
+described somewhere. :-)
+</pre>
+<a name="termcap"><h3>Fiddling with Terminfo entries</h3></a>
+<h4>Terminfo</h4>
+This is a bit tricky, do yourself a favour and make backups of all the files
+you tinker with. First check whether modifications are needed.
+
+<p>
+The terminfo database is usually located under
+<code>/usr/lib/terminfo</code>, <code>/usr/share/terminfo</code>, or
+<code>/etc/terminfo</code> depending
+on the distribution. The files you'll find are all binary, and have to be
+"decompiled" before you can edit them. This is done with
+<code>infocmp</code> (see <code>man infocmp</code>): 
+<pre><code>
+infocmp &gt;file
+</code></pre>
+This will decompile the entry corresponding to de <strong>current</strong>
+terminal. You can now edit <code>file</code> and change the relevant entries
+(see <code>man terminfo</code>). The file can be recompiled with
+<code>tic</code> (see <code>man tic</code>):
+<pre><code>
+tic file
+</code></pre>
+If you run <code>tic</code> as root, this will install the file to the right
+place.  If you do it as an unprivileged user, you need to create a
+directory named <code>.terminfo</code> in your home directory, and set (or
+"export" ;) an environment variable named TERMINFO pointing to
+it prior to running <code>tic</code>.  That should instruct <code>tic</code> to create the new
+file in <code>~/.terminfo</code>.  You also need to set the TERMINFO variable in your
+<code>~/.bash_profile</code>, in order to make terminfo look at the new file rather
+that at the system-wide one.
+<p>
+    By far the most tricky part is deciding what exactly you need to
+change, and the man page is not particularly helpful at that point.  For
+example, if your Backspace sends ^?, you have to set
+<pre><code>
+	kbs=\177
+</code></pre>
+You need to repeat the above procedure for all terminal types you
+use.
+
+<h4>Termcap</h4>
+Termcap entries in <code>/etc/termcap</code> are easier to modify, since
+it is a plain text file. Now all you
+have to do is locate your terminal type and edit the value you want to change
+(see  <code>man termcap</code>). You can also add a certain key if it's not
+present.The values of interest are:
+<pre><code>
+	kb = Backspace
+	kh = Home
+	@7 = End (don't ask me why "@7"...)
+	kD = Delete
+	kI = Insert
+	ku = Up arrow
+	kd = Down arrow
+	kl = Left arrow
+	kr = Right arrow
+	kP = PageUp
+	kN = PageDown
+</code></pre>
+You need to get the values returned by the keyboard by
+pressing <code>Ctrl+v</code> and the relevant key, and make sure they are the same in
+termcap.
+<a name="overview"><h3>Overview</h3></a>
+<center><a href="overview.html"><img src="overview4s.gif" alt=""></a></center>
+<p>
+Some notes: the keymap of the X Server is initialized using the system
+keymap. This means that changes in the keymap affect X. Xmodmap or xkb can
+overrule this. Thanks to
+<a href="mailto:schwarz@monet.m.isar.de">Christian Schwartz</a> for the
+picture.
+
+<p>Can't shoot your trouble? <a href="mailto:Anne@ibb.net">Mail</a>
+me.
+<hr>
+<center>
+<address><font size="-1">
+This page is maintained by Anne Baretta (<a href="mailto:Anne@ibb.net">anne@ibb.net</a>).
+ 
+ <script language="LiveScript">
+
+<!---//hide script from old browsers
+    document.write( "<br>Last updated "+ document.lastModified );
+//end hiding contents --->
+
+</script>
+</font>
+</address>   
+</center>
+<body>
+
+</html>

@@ -1,0 +1,894 @@
+<html>
+<head>
+
+<title>BackSpace and Delete Configuration for Linux: an alternative</title>
+   <meta name="Author" content="Anne Baretta">
+   <meta name="DESCRIPTION" content="Are you a Linux-user and tired of the
+misbehaviour of your backspace and delete keys? Work through this document
+to fix it once and for all.">
+   <meta name="KEYWORDS" content="Linux, backspace, delete, keyboard,
+configuration, keyboard-configuration, HOWTO, home, end, BackSpace, Delete,
+compose, Home, End, xterm, VT, less, pico, joe, nedit, netscape, emacs,
+bash, tcsh,minicom">
+   <meta name="GENERATOR" content="joe">
+   <!-- <base href="http://www.ibb.net/~anne/keyboard/">  -->
+</head>
+<body>
+<center><h1>Consistent BackSpace and Delete Configuration</h1>
+<center><font size="+1"><b><i>an alternative approach</i></b></font></center>
+<p><font size="-1">
+<a href="keyboardprev.html">keyboardprev.html</a>
+<p>version 1.15 <font size="-1">
+<script language="LiveScript">
+
+<!---//hide script from old browsers
+    document.write( "<br>"+ document.lastModified );
+//end hiding contents --->
+
+</script>
+</font></font>
+</center>
+<hr>
+<center>
+<a href="keyboard.html">Main Page</a>|<u>The Alternative Way</u>|<a href="troubleshooting.html">Troubleshooting</a></center>
+<hr>
+
+<center>
+<table>
+<tr>
+<th colspan="15"><h3>Index</h3></th>
+</tr><tr>
+<tr>
+<td colspan="15"><center><em>Introduction</em></center></td>
+</tr><tr>
+<td colspan="15"><a href="keyboardprev.html#intro"><center>&nbsp;Introduction&nbsp;</a></center></td> 
+</tr><tr>
+<td colspan="15"><center><em>Configuration of environments...</em></center></td>
+</tr>
+<tr>
+<td colspan="2"><a href="keyboardprev.html#VT"><center>&nbsp;VT&nbsp;</a></center></td>
+<td colspan="3"><a href="keyboardprev.html#terminfo"><center>&nbsp;terminfo&nbsp;</a></center></td>
+<td colspan="3"><a href="keyboardprev.html#Xterm"><center>&nbsp;Xterm&nbsp;</a></center></td>
+<td colspan="3"><a href="keyboardprev.html#X"><center>&nbsp;X&nbsp;</a></center></td>
+<td colspan="2"><a href="keyboardprev.html#Bash"><center>&nbsp;Bash&nbsp;</a></center></td>
+<td colspan="2"><a href="keyboardprev.html#Tcsh"><center>&nbsp;Tcsh&nbsp;</a></center></td>
+</tr><tr>
+<td colspan="15"><center><em>... and applications</em></center></td>
+</tr>
+<tr>
+<td colspan="15"><a href="keyboardprev.html#apps"><center>&nbsp;Apps-list&nbsp;</a></center></td>
+</tr>
+<tr>
+<td><a href="keyboardprev.html#athena">athena-apps</a></td>
+<td><a href="keyboardprev.html#emacs">emacs</a></td>
+<td><a href="keyboardprev.html#joe">joe</a></td>
+<td><a href="keyboardprev.html#jove">jove</a></td>
+<td><a href="keyboardprev.html#kvt">kvt</a></td>
+<td><a href="keyboardprev.html#less">less</a></td>
+<td><a href="keyboardprev.html#login">login</a></td>
+<td><a href="keyboardprev.html#minicom">minicom</a></td>
+<td><a href="keyboardprev.html#mutt">mutt</a></td>
+<td><a href="keyboardprev.html#nedit">nedit</a></td>
+<td><a href="keyboardprev.html#netscape">netscape</a></td>
+<td><a href="keyboardprev.html#pico">pico</a></td>
+<td><a href="keyboardprev.html#pine">pine</a></td>
+<td><a href="keyboardprev.html#vi">vi</a></td>
+<td><a href="keyboardprev.html#other">other</a></td>
+</tr>
+</table>
+</center>
+<hr>
+
+<center><a name="intro"><h2>Introduction</h2></a></center> This page
+includes all modifications needed to get the keys to work in all
+applications, except those that need to use ^H (jed, emacs...). This method
+was described and recommended in the Linux Journal (see <a href="keyboard.html#ref">the references</a>). Personally, I don't think this
+method is recommendable anymore, although I do use it on some of my systems.
+It will break applications that need ^H for something other than [&lt;---],
+and if you want to get everything right, you will have to edit terminfo
+entries anyway (dirty work arounds aside), so it's more work (well,
+actually, the terminfo entries are likely to be consistent with this
+approach, but it will be more work anyhow).
+
+<p>Many of the workarounds described below circumvent terminfo, presumably
+because a lot of them are broken and can't be relied upon. While this works
+well on your own system, it may cause others problems when they connect to
+your system (i.e. when they use a different keymapping), the reason why the
+terminfo database was made in the first place. Oh well...
+I am not sure what caused all this trouble, on the other hand, I am quite
+sure that many people disagree whatever you say or do. Anyway, this is
+listed as an alternative, and because it contains lots of hints that I don't
+mention on the other page.
+
+<p> <hr> <center><a name="VT"><h2>The Virtual Terminal (kernel-level
+configuration)</h2></a> <strong>1. find and edit
+<code>custom.map</code></strong></center>
+
+<p> The first step is to change the kernel's keyboard translation table.
+If you load a keymap at boot time, read on, if not, apply the kernelpatch in
+the <a href="keyboardprev.html#login">login</a> section. Let's begin with finding the
+installed keymap. Different Linux-distributions put the system files in
+different places. Here are some suggestions for finding the keymap on your
+system. Type at the command line:
+
+<p>
+<pre><code>[localhost]&gt; find /etc -type f | xargs grep loadkeys</code></pre>
+
+<p> If you see something like: 
+
+<p>
+<pre><code>/etc/init.d/boot: loadkeys /usr/lib/kbd/keytables/us.map</code></pre>
+
+<p> You have actually found the keymap you were looking for. If not, you can
+also search for <code>us.map</code> with locate (provided it's installed and
+up-to-date):
+
+<p>
+<pre><code>
+[localhost]&gt; locate us.map</code></pre>
+
+<p>
+On a <a href="http://www.redhat.com/">RedHat</a> system, type:
+
+<p><pre>
+<code>[localhost]&gt; cat /etc/sysconfig/keyboard</code></pre>
+
+<p> and you'll probably find something like:
+
+<p><pre>
+<code>KEYTABLE="/usr/lib/kbd/keytables/us.map"</code></pre>
+
+<p>On a <a href="http://www.debian.org/">Debian</a> system, copy
+<code>/etc/kbd/default.map</code> to <code>custom.map</code>.  If it isn't
+there, there may be some maps in <code>/usr/share/keytables</code>, or you
+can copy <code>/usr/src/linux/drivers/char/defkeymap.map</code> to
+<code>costum.map</code>, and edit this file (provided you have installed the
+kernel-sources). Also check <code>/usr/doc/kbd/</code>. Alternatively, sit
+back, relax and fetch one of the following files: <a href="customus.map.tar.gz">customus.map.tar.gz</a> which is a modified
+us.map or a modified version of dk-latin1.map: <a href="customdk.map.tar.gz">customdk.map.tar.gz</a>.
+
+<p> Be careful, it's possible to leave the keyboard in an unusable state if
+the instructions are not closely followed. Since you have copied the system
+keymap it's no problem, just reboot and the original keymap will be loaded.
+If you have edited the system keymap (without copying it) you will have to
+reboot using a boot flop.  However, if you carefully follow the instructions
+you shouldn't worry. Find the following lines:
+
+<pre>
+<code>
+
+keycode 14 = Delete               Delete
+        alt     keycode 14 = Meta_Delete
+</code></pre>
+
+and replace them with:
+<pre>
+<code>
+keycode 14 = BackSpace            BackSpace
+        alt     keycode 14 = Meta_BackSpace 
+</code>
+</pre>
+You also need a delete key, so find the line:
+
+<p><pre>
+<code>keycode 111 = Remove</code></pre>
+
+<p>
+and replace it with the lines:
+<pre>
+<code>
+keycode 111 = Delete          Delete
+        alt     keycode 111 = Meta_Delete
+</code>
+</pre>
+<a name="VTopt"><center><strong>2. optional editing of
+<code>custom.map</code>
+(recommended)</strong></center></a>
+
+<p>
+If you want to be able to generate characters such as
+&agrave;&eacute;&aacute;&euml; in a very convenient way, you can add a
+compose key to your <code>custom.map</code>. To use the right control-key,
+add the line:
+
+<pre>
+<code>
+keycode  97 = Compose
+</code>
+</pre>
+Set the following environment variable (in <code>/etc/profile</code>, or
+<code>/etc/csh.cshrc</code>) for <code>bash</code> and <code>tcsh</code>:
+
+<p>for bash: <code>
+&nbsp;&nbsp;export LC_CTYPE=iso-8859-1</code>
+
+<p>for tcsh:<code>
+&nbsp;&nbsp;set  LC_CTYPE=iso-8859-1</code>
+
+<p> Now you can generate (after loading <code>custom.map</code>) e.g.
+&oslash; by pressing the right control key, slash (/), and o.
+
+<p> Also <strong>very</strong> nice: if you want CTRL-ALT-END to shut down
+linux (halting the system instead of rebooting) you can add the following to
+your custom.map:
+
+<pre>
+<code>
+# Numeric Keypad End
+control alt        keycode 79 = KeyboardSignal
+control altgr      keycode 79 = KeyboardSignal
+# Editing keypad End
+control alt        keycode 107 = KeyboardSignal
+control altgr      keycode 107 = KeyboardSignal
+</code>
+</pre>
+
+Save the file, and edit <code> /etc/inittab</code>. Add or edit the
+following lines as shown:
+
+<p><pre>
+<code># Action on special keypress (CTRL-ALT-END)<br>
+kb::kbrequest:/sbin/shutdown -h now</code></pre>
+
+<p>
+<center><strong>3. testing and installing
+<code>custom.map</code></strong></center>
+
+<p> 
+Now, type (as root):
+
+<p><pre>
+<code>[localhost]&gt; loadkeys custom.map</code></pre>
+
+<p> If the new keytable works, install it permanently by putting it's
+location in <code>/etc/sysconfig/keyboard</code> for <a href="http://www.redhat.com/">RedHat</a>, or, on a <a href="http://www.slackware.org/">Slackware</a> system, copy the new keymap to
+<code>/etc/rc.d/rc.keymap</code>.  On a <a href="http://www.debian.org/">Debian</a> system, add the line <code>loadkeys
+/etc/kbd/default.map</code> to the <code>/etc/init.d/boot</code> boot script
+(provided the file you edited is placed in <code>/etc/kbd/default.map</code>
+of course). On other systems, by editing the boot script containing the
+loadkeys command. Well, that's it. Almost. You still need some shell
+specific modifications for <a href="keyboardprev.html#Bash">bash</a> and <a href="keyboardprev.html#Tcsh">tcsh</a>, and fiddle with <a href="keyboardprev.html#Xterm">xterm</a> settings
+to get the keys right.
+
+
+<hr>
+<center><a name="terminfo"><h2>Terminfo</h2></a></center> This can be a
+problem. If you find that the keys in e.g. vi are ok on the console but not
+in xterm, it means that the terminfo entry of xterm is not consistent with
+the keysettings. I am not really comfortable with telling you to fiddle with
+terminfo, please be careful, make backups!
+
+First find out wheter the terminfo entry for xterm is conform your xterm
+settings or not: 
+
+<pre><code>infocmp | grep kbs</code></pre> 
+
+should return a line which includes <code>kbs=^H</code>.
+This means DEL is mapped to the backspace key, which is what we want. 
+
+<pre><code>infocmp | grep kdch1</code></pre> 
+
+should return a line with <code>kdch1=\177~</code>. This means that \177 (or
+^?) is
+mapped to the delete key. You may find kbs=\177 and/or kdch1=\E[3~, or
+there will be no kdch1 at all. You can either edit the terminfo entry as
+described on the <a href="troubleshooting.html#termcap">Troubleshooting-page</a>
+(simply setting or adding <code>kdch1=\177</code> and
+<code>kbs=^H</code>, but make a backup first!) 
+
+<p> <hr> <center><a name="Xterm"><h2>Xterm</h2></a></center> The xterm (and
+friends) only needs little configuration. In the
+<code>/etc/X11/Xresources</code> or <code>~/.Xdefaults</code> add the line:
+
+<p>
+<pre><code>
+*ttyModes: erase ^H
+</code></pre>
+
+<p>
+Rxvt only uses <code>Xresources</code> if it is compiled with this option. 
+Luckily, the key bindings are correct by default (however, since rxvt uses
+readline, to get home and end to
+work you will have to edit <code>.inputrc</code>, see the <a href="keyboardprev.html#Bash">Bash</a> section).
+
+<p>
+While you're at it, let's get the Home and End keys to work:
+<pre><code>
+*vt100.translations: #override \
+        &lt;Key&gt;Home:      string("\033[1~") \n\
+        &lt;Key&gt;End:       string("\033[4~")
+</code>
+</pre>
+Putting <code>xterm</code> or <code>nxterm</code> in front of
+<code>*vt100.translations</code> makes the settings specific for xterm or
+nxterm.
+
+<p>BTW, have I told you that <code>Ctrl-V &lt;key&gt;</code> will tell you
+what sequence is sent to the shell? Try <code>Ctrl-V &lt;Delete&gt;</code>,
+it should give a <code>^?</code> in your xterm or console.
+
+<p>  
+Some notes:<br>1. <a href="keyboardprev.html#emacs">Emacs</a> resets the numeric keypad. In
+the <a href="keyboardprev.html#emacs">emacs</a> section you will find how this behavior
+can be corrected.<br>
+2. People have reported that the keypad-entry doesn't work with nxterm.<br>
+3. The syntax of the <code>Xresources</code> files is very strict, make
+sure you don't leave 
+blank spaces after the backslash on each line. Also watch the newline
+(<code>\n\</code>) sequences, there shouldn't be one at the last line of an
+entry.<br>
+4. The sections are named, if you only use <code>*VT100.Translations</code> it
+will work for all xterm and friends. <br>
+5. For info about <code>Xresources</code> and other X related stuff try
+see <a href="X.html"><code>'man X'</code></a>.
+
+<p><hr><center><a name="X"><h2>X</h2></a></center> Ideally, it should not
+be necessary to change or use <code>xmodmap</a></code> at all. However, it
+can be useful to create an <code>Xmodmap</code> if you want the keyboard to
+generate special characters in X, <code>xmodmap</code> can also be used to
+configure the function-keys. This is adequately described in the <a href="http://fatman.mathematik.tu-muenchen.de/~schwarz/debian-kbd/man/xmodmap.1x.html"><code>'man
+xmodmap'</code></a>. Make sure that the following lines are included in your
+<code>Xmodmap</code>:
+
+<p> <code>keycode 22 = BackSpace</code><br> <code>keycode 107 =
+Delete</code><p> Note that the keycodes in X are <strong>not</strong> the
+same as in a VT. Use <code>showkey</code> to see the keycodes generated by
+the keyboard in a VT, and <code>xev</code> in X. There is a graphical front
+end for X-keyboard configuration: <code>xkeycaps</code>. Get the .rpm at <a href="ftp://ftp.redhat.com/pub/redhat/">RedHat Powertools</a>, or get the <a href="http://www.debian.org/Packages/stable/x11/xkeycaps.html">Debian-package</a>
+(or plain tarball).
+
+<p> Another way of generating special characters in X (without using
+<code>xmodmap</code>) is by defining a Compose-key (for use as a "dead key")
+in <code>XF86Config</code> in the Keyboard section:
+
+<pre><code>
+  RightCtl        Compose
+</code>
+</pre>
+
+Now you have a compose-key with the same properties as the one described in
+the <a href="keyboardprev.html#VT">VT</a> section. Remember to set the environment variable
+<code>LC_CTYPE=iso-8859-1</code> (see <a href="keyboardprev.html#VTopt">VT optional...</a>).
+Consult <a href="XF86Config.man.html"><code>'man XF86Config'</code></a> if
+you want to know more. <strong>Note</strong>: this doesn't seem to work with
+nxterm... suggestions anyone?<br> Alternatively, owners of a windows
+keyboard (one with extra buttons, it need not be a M$ natural keyboard) can
+enable the <code>XKEYBOARD</code> extension (enabled per default) in
+<code>XF86Config</code> and uncomment the line (follow the instructions in
+the file):
+
+<pre><code>
+  XkbModel    "microsoft" 
+</code>
+</pre>
+
+Now you can use the button with the windows flag on it to produce a great
+number of exotic characters, just press it in combination with e.g. a,
+producing &aacute; (a clear disadvantage is that there is no logic in the
+location of the special characters at all...).
+
+<p> Yet another way to use "dead keys" in X is by installing a modified
+version of libX11 which includes support for dead keys (transparent for all
+apps). First, get the <a href="">modified version of libX11</a> (make sure
+you get the right version, if you use glibc replace both libX11, ELF-libc5
+and ELF-libc6). Now, deactivate the XKB extension of XFree86 (edit
+<code>XF86Config</code> and run xmodmap on a Xmodmap file with dead keys
+like dead_acute, dead_grave, dead_cedilla, dead_ogonek and a Multi_keys one
+too. 
+
+<p> A special case is if you use xdm, you need to deactivate XKB from the
+<code>/etc/X11/xdm/Xservers</code> file, passing a -kb parameter to the
+server like this: 
+<pre><code>
+:0 local /usr/X11R6/bin/X -kb
+</code></pre>
+then in <code>/etc/X11/xdm/Xsetup_0</code> file add a line to load the
+Xmodmap, like this:
+<pre><code>
+if [ -r /etc/X11/xinit/.Xmodmap ]; then
+        /usr/X11R6/bin/xmodmap /etc/X11/xinit/.Xmodmap
+fi
+</code></pre>
+Now chars accesible by AltGr, dead keys or compose are usable in xdm too.
+
+<hr>
+<center><a name="Bash"><h2>Bash</h2></a></center>
+
+<p> Create a file, <code>/etc/inputrc</code> for system wide use and set the
+INPUTRC variable to point to it, or
+<code>~/.inputrc </code> for personal use. Actually, this is the readline
+initialization file, readline is a library that some programs (bash, kvt)
+use to read input (try <code>bind -v</code> to see a list of readline key
+and function bindings). Cut and paste the following in the file to make the
+Delete key delete characters under the cursor, and make Home and End work as
+well. DEL works only if you've created and installed
+<code>custom.map</code>, if not you need <code>"\e[3~": delete-char</code>.
+However, <a href="keyboardprev.html#kvt">kvt</a> needs this no matter what you do with your
+keymap, so just throw them both in (if you try <code>bind -v</code> you'll
+see that some keys or functions can be found on 5 different sequences, this
+is perfectly ok...):
+
+<pre>
+<code>
+DEL: delete-char
+# this is actally equivalent to "\C-?": delete-char
+# VT
+"\e[1~": beginning-of-line
+"\e[4~": end-of-line
+# kvt
+"\e[3~": delete-char
+"\e[H":beginning-of-line
+"\e[F":end-of-line
+# rxvt
+"\e[7~":beginning-of-line
+"\e[8~":end-of-line
+</code>
+</pre>
+If a system-wide /etc/inputrc was created, add the following line to
+/etc/profile:
+
+<p><pre>
+<code>export INPUTRC=/etc/inputrc</code></pre>
+
+<p> I wonder what's easier, cutting and pasting the above (and the
+international bit below) or (right/shift) clicking on <a href="inputrc">inputrc</a> to download the file...
+
+<p> Make sure that the stty erase character is set to <code>
+^H</code>. Type 
+
+<p><pre>
+<code>stty -a | grep erase</code></pre>
+
+<p>and check if it says
+
+<p><pre><code>erase = ^H;</code></pre> 
+
+<p>If it is set to something else (e.g. <code>^?</code>) then put the
+following line in both <code>.bashrc</code> and in either
+<code>.bash_profile</code> or <code>/etc/profile</code>:
+
+<pre>
+<code>
+  if tty --quiet ; then
+    stty erase '^H'
+  fi
+</code>
+</pre>
+and for xterm and rxvt add this:
+<pre>
+<code>
+if [ "$TERM" = "xterm" -o "$TERM" = "xterm-color" -o "$TERM" = "rxvt" ];
+then
+   # activate keypad
+   echo -en '\033&gt;'
+   # BackSpace sends ^H
+   echo -en '\033[36h'
+fi
+</code>            
+</pre>
+
+<p> If you create <code>/etc/inputrc</code>, note that Bash will ignore
+<code>~/.inputrc</code> (currently this happens in all distributions except
+Debian, however, this might change in the future). As an alternative, you
+can edit <code>~/.inputrc</code>, and copy this to <code>/etc/skel/</code>,
+so it's in the home directories of all new users. <br> Push the
+key-combination '<code>Ctrl-x-r</code>' (push the control-key, the x-key.
+release it, push the r-key, release it, and then release the control-key) to
+see if the changes in <code>inputrc</code> take effect. Or just login again,
+and it will work. If it doesn't work, note the following:
+
+<p>if you leave alone the line
+
+<pre>	<code>keycode 111 = Remove</code></pre>
+
+in your <code>custom.map</code>, the Delete key will return the
+<code>^[[3~</code> sequence, so you need to put
+
+<pre>
+<code>"\e[3~": delete-char</code>
+</pre>
+
+in your <code>inputrc</code>.  If you change the "Remove" above to "Delete" as
+suggested, the Delete key will return \177, and you need to put
+
+<pre>	<code>DEL:	delete-char</code></pre>
+
+in your <code>inputrc</code> (with readline, <code>DEL</code> is simply a
+shortcut for <code>\177</code>, which is the same as <code>^?</code>). Make
+sure your <code>custom.map</code> works as intended by pressing
+<code>Ctrl+v</code> and &lt;Delete&gt;.
+
+<!--Check <a href="keybdextra.html">Keyboard Tips & Tricks</a> for
+<code>bash</code> tips.-->
+
+<p>You can also change the keybindings on the fly with the
+<code>bind</code> command, e.g: 
+<pre>
+[localhost]&gt; bind "\C-?": delete-char
+</pre>
+This is useful to test different keybindings, if they work you can put them
+in <code>~/.inputrc</code>. Read all about it in the readline manpage.
+
+<p> People using keymaps with e.g. Scandinavian characters who would like
+bash to display these characters (&oslash;l;-) have to add the following
+lines in <code>.inputrc</code>:<br> <code>set convert-meta off</code><br>
+<code>set output-meta on</code><br> <code>set input-meta on</code><br> <br>
+For more info, check the <a href="Danish-HOWTO.gz"><code>Danish-HOWTO</code></a>. <hr> <center><a name="Tcsh"><h2>Tcsh</h2></a></center> If you use the tcsh shell, put the
+following lines in your <code>/etc/cshrc </code> or your personal
+<code>~/.cshrc file: </code>
+
+<pre>
+<code>
+  if ($term == "xterm" || $term == "vt100" \
+            || $term == "vt102" || $term !~ "con*") then
+        # bind keypad keys for console, vt100, vt102, xterm
+          bindkey "\e[2~" overwrite-mode    # Ins
+          bindkey ^? delete-char            # Delete
+          bindkey "\e[1~" beginning-of-line # Home
+          bindkey "\e[4~" end-of-line       # End
+      endif 
+</code>
+</pre>
+
+To see whether it works or not, type:
+
+<p>
+<code>[localhost]&gt; source .cshrc</code>
+
+<p>
+<hr>
+<hr>
+<center><a name="apps"><h1>Applications</h1></a></center>
+
+<p>
+<center>
+<table width="100%">
+<tr>
+<td><a href="keyboardprev.html#athena">athena-apps</a></td>
+<td><a href="keyboardprev.html#emacs">emacs</a></td>
+<td><a href="keyboardprev.html#joe">joe</a></td>
+<td><a href="keyboardprev.html#jove">jove</a></td>
+<td><a href="keyboardprev.html#kvt">kvt</a></td>
+<td><a href="keyboardprev.html#less">less</a></td>
+</tr>
+<tr>
+<td><a href="keyboardprev.html#login">login</a></td>
+<td><a href="keyboardprev.html#minicom">minicom</a></td>
+<td><a href="keyboardprev.html#mutt">mutt</a></td>
+<td><a href="keyboardprev.html#nedit">nedit</a></td>
+<td><a href="keyboardprev.html#netscape">netscape</a></td>
+<td><a href="keyboardprev.html#pico">pico</a></td>
+<td><a href="keyboardprev.html#pine">pine</a></td>
+</tr>
+</table>
+</center>
+<hr>
+<center><a name="athena"><h2>Athena Applications</h2></a></center>
+
+For programs using the Athena widgets (xpaint, xbmbrowser, xman, xmh, xedit,
+pixmap, bitmap, editres...) put the following in <code>.Xdefaults</code> to
+get Delete to work:
+
+<pre>
+<code>
+*Text.translations:    #override \
+        ~Shift ~Meta &lt;Key&gt;Delete: delete-next-character()
+<!-- \n\
+        ~Shift  Meta &lt;Key&gt;Delete: delete-next-word() \n\
+        ~Shift  ~Meta &lt;Key&gt;Delete: kill-word()-->
+</code>
+</pre>
+
+<center><a name="emacs"><h2>Emacs</h2></a></center>
+
+There seem to be two ways, the first is to create a <code>~/.emacs</code>
+file with keybindings, the other is to define the keys from within emacs.
+Both methods are described in the <a href="http://fatman.mathematik.tu-muenchen.de/~schwarz/debian-kbd/doc/Key-Setup">
+Key-Setup Mini-Howto</a>. Either way, you will have to choose between losing the
+``&lt;Ctr-h&gt; =  help'' mapping and Backspace.
+
+<p> Emacs resets the numeric keypad when exiting, which means that the
+numeric keypad will no longer transmit escape sequences. However, this
+behavior can be corrected by removing the "<code>rmkx</code>" capability
+from the terminfo database (be careful, make a backup first and only attempt
+this if it bothers you...):
+
+<p>
+<code>[localhost]&gt; cd /usr/lib/terminfo/x</code>  
+(note: on some systems
+<code>/etc/terminfo/x</code>)<br>
+<code> [localhost]&gt; infocmp xterm &gt; xterm.txt<br> 
+[localhost]&gt; emacs xterm.txt</code>
+
+<p> Remove the "<code>rmkx</code>" entry, save the file and exit. Then:
+<p><code> [localhost]&gt; tic xterm.txt<br> [localhost]&gt; rm xterm.txt</code>
+
+<center><a name="joe"><h2>Joe</h2></a></center> 
+
+First find the file joerc. It is most likely
+<code>/usr/lib/joe/joerc</code>, but sometimes <code>/etc/joerc</code>, or
+maybe even <code>/usr/local/lib/joerc</code>. Try <code>'locate
+joerc'</code> if you can't find the file. Make a backup for safety, or copy
+it to .joerc in your home directory, and change the following lines in de
+section "Standard JOE user interface":
+
+<pre>
+<code>
+backs           ^?              Backspace
+backs           ^H 
+</code>
+</pre>to:
+<pre>
+<code>
+ backs           ^?              Backspace
+backs           ^H </code>
+</pre>and add:
+<pre>
+<code>
+delch           ^?              # Del = Delete in default.map
+delch           ^[ [ 3 ~        # Del = Remove in default.map</code>
+</pre>
+
+Note: the space in front of 'backs' disables this line.
+
+<p> Add the following lines to in the same section to enable the Home en End
+keys:
+
+<pre>
+<code>
+bol              ^[ [ H          # Standard xterm escape seq.
+bol              ^[ [ 1 ~        # Standard VT escape seq.
+bol              ^[ [ 7 ~        # rxvt
+eol              ^[ [ F          # Standard xterm escape seq.
+eol              ^[ [ 4 ~        # Standard VT escape seq.
+eol              ^[ [ 8 ~        # rxvt
+</code>
+</pre>
+
+<strong>Note</strong> that you first have to make sure that Home and End
+work in an <a href="keyboardprev.html#Xterm">xterm</a>. Check out <a href="joe.html"><code>'man
+joe'</code></a>. BTW, these modifications apply to <code>jpicorc</code>,
+<code>jstarrc</code> and <code>jmacsrc</code> as well.  
+
+<center><a name="jove"><h2>Jove</h2></a></center>
+
+To get the emacs-clone <a href="ftp://sunsite.auc.dk/pub/os/linux/sunsite/apps/editors/emacs/clones/">jove</a>
+to get the key-thing right, add the following to <code>joverc</code>
+(<code>/usr/lib/jove/</code> or <code>/usr/local/lib/jove/)</code>:
+
+<pre>
+<code>
+bind-to-key delete-previous-character ^H
+bind-to-key delete-next-character ^?
+</code>
+</pre>
+Thanks to James Murray.
+
+<center><a name="kvt"><h2>Kvt</h2></a></center>
+
+Kvt, <a href="http://www.kde.org/">KDE's</a> rxvt-based xterminal, turned out
+to be a special case. Since it uses the readline library (see the <a href="keyboardprev.html#Bash">Bash section</a>) it can be easily configured. Add this (yes,
+regardless of what is already there...) to your <code>~/.inputrc</code>
+(<code>tcsh</code> users too!):
+
+<code>
+<pre>
+"\e[3~":delete-char
+</code>
+</pre>
+
+It turns out kvt receives the <code>"\e[3~"</code> sequence regardless of
+the system keymap. Oh, don't forget to check that the following lines are
+present to make the Home and End keys do their job:
+
+<code>
+<pre>
+"\e[H":beginning-of-line
+"\e[F":end-of-line
+</code>
+</pre>
+
+
+<center><a name="less"><h2>Less</h2></a></center>
+
+Create a file, <code>/etc/lesskey</code>, for system-wide use. This will be
+a <code>lesskey</code> input file. Put the following lines in the file:
+
+<pre>
+<code>
+#line-edit
+\177           delete
+\e[1~          home
+\e[4~          end
+</code>
+</pre>
+
+You can also add (may not be necessary since it is the default):
+
+<pre>
+<code>
+^H              BackSpace
+</code>
+</pre>
+
+Some people report using <code>\e[3~</code> instead of <code>\177</code> for
+<code>delete</code>. These people haven't modified the system keymap, and
+should do either that or look at <a href="keyboard.html">the main
+page</a>. <br> Save the file, and compile it as follows:
+
+<p><pre>
+<code>[localhost]&gt; lesskey -o /etc/less /etc/lesskey</code></pre>
+
+<p>
+Add the following line to /etc/profile:
+
+<p><pre>
+<code>export LESS="-MM -k/etc/less"</code></pre>
+
+<p>
+Now type:
+
+<p>
+<code>[localhost]&gt; . /etc/profile</code>
+
+<p> And the next time you use less Delete will delete, and BackSpace will
+backspace! In an ideal world, anyway. Actually, my system needed some
+additional modifications. To get it to work in a VT, I had to make sure that
+the stty erase character was set to <code>^H</code>, please refer to the <a href="keyboardprev.html#Bash">Bash</a> section.
+
+<p> By fiddling with these settings you should be able to get less to accept
+(all of) the holy keycodes, at least, it works on my computer. For some
+exciting reading, check <a href="lesskey.html"><code>'man
+lesskey'</code></a>. 
+
+<!--For some way more exciting reading, check <a
+href="keybdextra.html">Keyboard Tips & Tricks</a> for additional
+<code>less</code> tips. -->
+
+<center><a name="login"><h2>Login</h2></a></center>
+
+Finally... the beast... our nemesis... the one that lurks from the dark,
+independent of any keymapping... or is it? No, but it takes a kernel patch
+to get this one to behave. Download this (right button...) <a href="kbdkrnlpatch">kbdkrnlpatch</a> and patch the kernel: cp and cd to
+<code>/usr/src/</code> (yes, you have to have the source installed) and
+type: <code>patch &lt; kbdkrnlpatch</code> (if you want to undo the patch,
+type <code>patch -R &lt; kbdkrnlpatch</code>, which reverses the patch).
+Compile the kernel, and voila. This patch switches BS and DEL, in the same
+way as the edited keymap (<code>custom.map</code>) does. This actually means
+that you do not have to load a keymap at all, provided you are satisfied
+with the other keys of course:-) In addition to all this, the default erase
+character is changed to BS instead of DEL. NOTE: this patch is i386
+specific, it will not work on other platforms. Thanks to Dick Streefland for
+the patch.
+
+<center><a name="minicom"><h2>Minicom</h2></a></center>
+
+Start minicom as root, entering the command:
+
+<p><pre><code>[localhost]&gt; minicom -s</code></pre>
+
+<p>Select "Screen and Keyboard" from the menu. Type "A", then press the
+space bar. Use "B" to determine what BackSpace should transmit. Since most
+remote systems will use Delete to erase to the left, "DEL" is probably the
+best choice here. If this creates a problem, change it to "BS". Press ESC
+when done.  At the configuration menu, select "Save setup as dfl", then
+"Exit from Minicom".
+
+<center><a name="mutt"><h2>Mutt</h2></a></center>
+
+<a href="http://www.cs.hmc.edu/~me/mutt/">Mutt</a> let's you use your
+favourite editor, however, you enter email addresses in mutt's editor, and
+you may like to delete characters every once in a while. Add the following
+to your <code>~/.muttrc</code>:
+
+<pre>
+<code>
+bind editor      delete         delete-char
+</code>
+</pre>
+
+<center><a name="nedit"><h2>Nedit</h2></a></center>
+Put the following in <code>~/.Xdefaults</code>:
+       
+<p><pre><code> nedit.remapDeleteKey: False</code></pre>
+
+<p> Save the file, and the next time you start <a href="http://www-pat.fnal.gov/nirvana/nedit.html">nedit</a> the Delete key
+will do what we want it to: delete under the cursor. Note: you can also put
+the line in <code> ~/.nedit</code>, but every time you
+save the default settings, the <code>.nedit</code> file will be overwritten,
+and you'll have to (n)edit it again.
+
+<center><a name="netscape"><h2>Netscape</h2></a></center>
+
+The keybindings of Motif-applications such as Netscape are configured
+correctly by default, so they should work after the <a href="keyboardprev.html#VT">VT</a>-fix
+is applied. At least, if the XKeysymDB is installed (usually the case,
+although Slackware users may want to check this). Netscape looks for this
+file in <code>/usr/X11R6/lib/X11/</code> or
+<code>/usr/lib/X11/XKeysymDB</code> (and some other places). If netscape
+still can't find the file set the <code>XKEYSYMDB</code> environment
+variable. Check <a href="keyboardalt.html#netscape">the other page</a> if
+you want more suggestions. If you use <code>xmodmap</code>, see <a href="keyboardprev.html#X">X</a> for more about <code>xmodmap</code>.  Note: on LST Linux
+2.2, uncomment the <code>Xmotif Defaults</code> section, in
+<code>/usr/X11R6/x11/xinit/.Xresources</code>. They make BackSpace and
+Delete do the same thing, so you'd better get rid of them.
+
+<center><a name="pico"><h2>Pico</h2></a></center>
+
+Just use '<code>pico -d</code>' instead of '<code>pico</code>'. Add an alias
+to <code>/etc/bashrc, /etc/cshrc, ~/.bashrc</code> or <code>~/.cshrc</code>.
+
+<center><a name="pine"><h2>Pine</h2></a></center>
+
+In <a href="http://www.washington.edu/pine/">pine</a>, go to 'Setup' and
+choose the 'Configure' option, and enable the
+<code>compose-maps-delete-key-to-ctrl-d</code> option. You can also use an
+alternate editor. Edit <code>.pinerc</code> and find the following lines:
+
+<p><code>
+# Specifies the program invoked by ^_ in the Composer,<br>
+# or the "enable-alternate-editor-implicitly" feature.<br>
+editor=</code>
+
+<p> You can enter the command for any editor here, e.g. <code>joe</code> or
+<code>vi</code>. <p> If you want the editor to be started right away, start
+<code>pine</code>, enter <code>SETUP</code> and <code>Config</code> and
+select the <code>enable-alternate-editor-implicitly</code> option. Now the
+editor of choice will be started automagically when you start writing a
+message.<br> Another way to deal with pine is to switch to mutt, it's six
+times as small, and can do a lot more (colors, threadsupport, pgp... you
+name it). Sorry, just had to mention that.
+
+<center><a name="vi"><h2>Vi</h2></a></center>
+Vi and derivatives (like vim, elvis, nvi) look at terminfo, so either you
+can fix the <a href="keyboardprev.html#terminfo">terminfo</a> entry, on the
+console this will be the "linux" terminfo entry. Alternatively, you
+can try a dirty work around.
+
+<pre><code>
+#!/bin/sh
+$if TERM=linux
+export TERM=vt100
+endif
+exec vi "$@"
+</code></pre>
+
+Now you can make an alias pointing to the wrapper. If you have problems in
+xterms, you can try to change linux to xterm.
+
+<center><a name="other"><h2>Other</h2></a></center>
+Whatever method you use to map the keys, you can run into trouble when somebody decides to do it differently on his system, and you want to connect with it. Luckily this is easily worked around. Create the following script, let's call it kbdfiks and make it executable (make sure you have expect installed on your system). 
+
+<pre>
+#!/usr/bin/expect
+
+eval spawn -noecho $argv
+
+interact {
+ \010        {send "\177"}
+ \177        {send "\033\[3~"}
+}
+</pre>
+Now type <code>kbdfiks telnet brokenhost</code> and the keys will work. Thanks to Philip Hands for this clever workaround.
+
+<hr>
+ 
+<p>
+<center>
+<address><font size="-1">
+This page is maintained by Anne Baretta (<a href="mailto:Anne@ibb.net">anne@ibb.net</a>).
+ 
+ <script language="LiveScript">
+
+<!---//hide script from old browsers
+    document.write( "<br>Last updated "+ document.lastModified );
+//end hiding contents --->
+
+</script>
+</font>
+</address>   
+</center>
+
+</body>
+
+</html>
